@@ -1,0 +1,16 @@
+<resources>
+
+    <string name="app_name">WeatherApi</string>
+    <string name="launch">Launch</string>
+    <string name="title_activity_main">Previsión en Andalucía</string>
+    <string-array name="cities">
+        <item >Almería</item>
+        <item >Cádiz</item>
+        <item >Córdoba</item>
+        <item >Granada</item>
+        <item >Huelva</item>
+        <item >Jaén</item>
+        <item >Málaga</item>
+        <item >Sevilla</item>
+    </string-array>
+</resources>
