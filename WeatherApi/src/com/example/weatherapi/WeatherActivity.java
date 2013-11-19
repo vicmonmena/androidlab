@@ -10,6 +10,7 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 import android.app.Activity;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -18,7 +19,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -52,6 +53,10 @@ public class WeatherActivity extends Activity {
 	private static final String TEMP_NAME = "temp";
 	private static final String DATE_NAME = "date";
 	
+	private static final String DESCRPTION_NAME = "description";
+	private static final String IMAGE_NAME = "img";
+	private static final String SRC_NAME = "src";
+	
 	private static final String HIGH_TEMP_NAME = "high";
 	private static final String LOW_TEMP_NAME = "low";
 	private static final String ANDALUCIA_WOEID_CODES[] = {"752212", "755404",
@@ -65,7 +70,8 @@ public class WeatherActivity extends Activity {
 	private TextView mCity;
 	private TextView mToday;
 	private TextView mTomorrow;
-
+	private ImageView mImage;
+	
 	/**
 	 * Guarda la informacion relevante del servicio
 	 *
@@ -77,6 +83,7 @@ public class WeatherActivity extends Activity {
 		int highTemperature;
 		int lowTemperatureTomorrow;
 		int highTemperatureTomorrow;
+		String image;
 	}
 
 	@Override
@@ -87,6 +94,7 @@ public class WeatherActivity extends Activity {
 		mCity = (TextView) findViewById(R.id.city);
 		mToday = (TextView) findViewById(R.id.today);
 		mTomorrow = (TextView) findViewById(R.id.tomorrow);
+		mImage = (ImageView) findViewById(R.id.imageView1);
 	}
 
 	@Override
@@ -189,6 +197,8 @@ public class WeatherActivity extends Activity {
 			findViewById(R.id.progressBar1).setVisibility(View.GONE);
 			findViewById(R.id.spinner_cities).setVisibility(View.VISIBLE);
 			findViewById(R.id.linear_info).setVisibility(View.VISIBLE);
+			
+			new LoadImageTask().execute(result.image);
 			showResult(result);
 		}
 		
@@ -218,15 +228,11 @@ public class WeatherActivity extends Activity {
 						
 						if (parser.getName().equals(LOCATION_NAME)) {
 							info.city = parser.getAttributeValue(null, CITY_NAME);
-						}
-						
-						if (parser.getName().equals(CONDITION_NAME)) {
+						} else if (parser.getName().equals(CONDITION_NAME)) {
 							info.temperatureNow = 
 								Integer.parseInt(parser.getAttributeValue(null, TEMP_NAME));
-						}
-						
-						if (parser.getName().equals(FORECAST_NAME)) {
-							
+						} else if (parser.getName().equals(FORECAST_NAME)) {
+
 							// Today
 							info.lowTemperature = Integer.parseInt(
 								parser.getAttributeValue(null, LOW_TEMP_NAME));
@@ -254,10 +260,79 @@ public class WeatherActivity extends Activity {
 			
 			return info;
 		}
+		
+		/**
+         * Load an image in background.
+         */
+        private class LoadImageTask extends AsyncTask<String, Void, Drawable> {
+                
+        	@Override
+        	protected void onPreExecute() {
+        		// TODO Auto-generated method stub
+        		super.onPreExecute();
+        		findViewById(R.id.imageView1).setVisibility(View.GONE);
+				findViewById(R.id.progressBar2).setVisibility(View.VISIBLE);
+        	}
+        	
+	        @Override
+	        protected Drawable doInBackground(String... params) {
+	        	Drawable image = null;
+	        	String imageURI = params[0];
+	        	
+				if (!TextUtils.isEmpty(imageURI)) {
+	                try {
+	                	// image = getImageFromURL(imageURI);
+	                } catch (Exception e) {
+	                	image = getResources().getDrawable(R.drawable.ic_image_not_found);
+	                	Log.e(TAG, "An exception was caught loading the image", e);
+	                }
+	                
+	                // Retardo para que se muestre la progressbar
+	    			try {
+	    				Thread.sleep(3000);
+	    			} catch (InterruptedException e) {
+	    				// TODO Auto-generated catch block
+	    				e.printStackTrace();
+	    			}
+				} else {
+					image = getResources().getDrawable(R.drawable.ic_image_not_found);
+				}
+	            return image;
+	        }
+	
+	        @Override
+	        protected void onPostExecute(Drawable result) {
 
+	        	if(result != null) {
+	                ((ImageView) findViewById(R.id.imageView1)).setImageDrawable(result);
+	        	} else {
+	        		Toast.makeText(WeatherActivity.this, "Image not found. If persist, please contact with developers.",
+	                Toast.LENGTH_SHORT).show();
+	        	}
+	                
+				findViewById(R.id.imageView1).setVisibility(View.VISIBLE);
+				findViewById(R.id.progressBar2).setVisibility(View.GONE);
+				super.onPostExecute(result);
+	        }                
+        }
+
+        /**
+         * Get an image drawable from url.
+         * @param url
+         * @return
+         */
+        public Drawable getImageFromURL(String url) {
+                Drawable image = null;
+                InputStream is = CustomHttpConnection.getImage(url);
+                
+                if (is != null) {
+                       image = Drawable.createFromStream(is, "image");
+                }
+                return image;
+        }
 		/**
 		 * Parsea la respuesta en JSon a partir de la informacion del servicio
-		 * 
+		 * @deprecated El servicio ya no está disponible.
 		 * @param is
 		 * @return
 		 */
